@@ -1,0 +1,34 @@
+cabal-version:      2.4
+
+name:               compiler
+
+version:            0.1.0.0
+
+synopsis:           C compiler written in Haskell
+
+homepage:
+
+license:            NONE
+
+-- The package author(s).
+author:             Justin Meimar
+
+-- An email address to which users can send suggestions, bug reports, and patches.
+maintainer:         j.meimar111@gmail.com
+
+-- A copyright notice.
+-- copyright:
+category:           Compilers
+
+-- Extra files to be distributed with the package, such as examples or a README.
+extra-source-files:
+    CHANGELOG.md
+    README.md
+
+executable compiler
+    -- .hs or .lhs file containing the Main module.
+    main-is:          src/main.hs
+
+    build-depends:    containers, base ^>=4.14.3.0
+
+    default-language: Haskell2010
