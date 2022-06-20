@@ -8,10 +8,11 @@ data Token = Num Integer
     | Keyword String
     | Id String
     | Symbol String
+    | Other String
     deriving (Show)
 
 {-
-SymbolTable typeclass is synonym for Map of (String : Token)
+SymjbolTable typeclass is synonym for Map of (String : Token)
 -}
 type SymbolTable = Map.Map [Char] Token
 
@@ -19,13 +20,15 @@ symbolTable :: SymbolTable
 symbolTable = Map.fromList [
     ("return", Keyword "return"),
     ("int", Keyword "int"),
+    ("char", Keyword "char"),
     (";", Symbol "semi-colon"),
     ("(", Symbol "left-bracket"),
     (")", Symbol "right-bracket"),
     ("{", Symbol "left-curl-bracket"),
     ("}", Symbol "right-curl-bracket"),
     ("&", Symbol "address"),
-    ("*", Symbol "pointer")
+    ("*", Symbol "pointer"),
+    ("\n", Other "new-line")
     ]
 
 stripWhiteSpace :: String -> [Char]
@@ -35,34 +38,33 @@ stripWhiteSpace input = if firstChar == ' '
     else firstChar : stripWhiteSpace (tail input)
     where firstChar = head input
 
--- tokenGen :: String -> Int -> [Token]
-tokenGen :: String -> Int -> [Token]
-tokenGen _ 0  = []
-tokenGen [] _ = []
-tokenGen line lenLine = case result of 
-    --Just a -> a : tokenGen newLine newLen
-    Just a -> [a] 
-    Nothing -> []
-    where   result = bruteLookup line lenLine
-            newLine = drop 5 line 
-            newLen = lenLine - 5
+{-
+    Matches for Symbols and Keywords
+-}
+tokenizeLine :: String -> [Token]
+tokenizeLine [] = []
+tokenizeLine input = tokenizeStatic input 1 ++ tokenizeLine (tail input)
 
-bruteLookup :: String -> Int -> Maybe Token
-bruteLookup input ridx = if isNothing curSlice  
-    then    bruteLookup input (ridx-1)
-    else    curSlice
-    where   curSlice = Map.lookup splice symbolTable
-            splice = take (length input - ridx + 1) input
+tokenizeStatic :: String -> Int -> [Token]
+tokenizeStatic input len = mapMaybe lookup combs --mapMaybe removes Maybes
+    where
+        tryPermutations :: String -> Int -> [String]
+        tryPermutations input len = if len > length input
+            then [""]
+            else take len input : tryPermutations input (len+1)
+
+        lookup :: String -> Maybe Token
+        lookup input = Map.lookup input symbolTable
+
+        combs = tryPermutations input len
 
 main :: IO()
 main = do
     x   <- getArgs
-    infile <- openFile (head x) ReadMode
-    
-    firstLine <- hGetLine infile 
-    secondLine <- hGetLine infile
-    thirdLine <- hGetLine infile
+    infile <- openFile (head x) ReadMode 
+    firstLine <- hGetContents infile
 
-    let my_str = tokenGen firstLine (length firstLine)
-    print my_str
+    let tokenList = tokenizeLine firstLine
+    print tokenList
+
     print firstLine
